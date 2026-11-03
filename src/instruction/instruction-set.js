@@ -78,3 +78,10 @@ export function decodeInto(out, b0, b1, b2, b3) {
   out.imm = b2 | (b3 << 8);
   return out;
 }
+
+// Assembly operand syntax per mnemonic. Memory ops use brackets:
+//   LOAD rd,[imm]  LOADR/LOADB rd,[rs]  STORE [imm],rs  STORER/STOREB [rd],rs
+const SHAPE_OVERRIDE = { LOAD: 'ld_i', LOADR: 'ld_r', LOADB: 'ld_r', STORE: 'st_i', STORER: 'st_r', STOREB: 'st_r' };
+export function shapeOf(name) {
+  return SHAPE_OVERRIDE[name] ?? BY_NAME[name].fmt;
+}

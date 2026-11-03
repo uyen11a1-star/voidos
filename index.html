@@ -8,16 +8,28 @@
 </head>
 <body>
   <main>
-    <h1>VoidOS <small>v0.1 · Phase 2: Memory</small></h1>
-    <pre id="screen" aria-live="polite"></pre>
-    <p id="status"></p>
-    <p id="memstat"></p>
-    <pre id="memdump" aria-label="Memory dump"></pre>
+    <h1>VoidOS <small>v0.1 · Phase 3: Assembler</small></h1>
+    <label class="field">Ví dụ
+      <select id="example">
+        <option value="hello">hello.asm</option>
+        <option value="fib">fib.asm (Fibonacci)</option>
+        <option value="counter">counter.asm (.data)</option>
+      </select>
+    </label>
+    <textarea id="src" rows="14" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" aria-label="Assembly source"></textarea>
     <div class="row">
-      <button id="run" type="button">Chạy lại</button>
+      <button id="run" type="button">Assemble &amp; chạy</button>
       <button id="prot" type="button">Test bảo vệ</button>
       <button id="stop" type="button">Dừng</button>
     </div>
+    <h2>Màn hình</h2>
+    <pre id="screen" aria-live="polite"></pre>
+    <p id="status"></p>
+    <p id="memstat"></p>
+    <h2>Listing</h2>
+    <pre id="listing"></pre>
+    <h2>RAM (địa chỉ 0)</h2>
+    <pre id="memdump" aria-label="Memory dump"></pre>
   </main>
   <script type="module" src="./src/main.js"></script>
 </body>

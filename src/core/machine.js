@@ -42,3 +42,17 @@ export function spawn(machine, { segments, io = {}, syscall = null }) {
   cpu.reset(0);
   return { space, mmu, cpu };
 }
+
+// Spawn an assembled program: everything before dataStart is code (R+X),
+// everything from dataStart on is data (R+W, not executable).
+export function spawnImage(machine, program, opts = {}) {
+  const { image, dataStart } = program;
+  const codeEnd = dataStart ?? image.length;
+  const segments = [];
+  if (codeEnd > 0) segments.push({ addr: 0, bytes: image.subarray(0, codeEnd), perms: PERM.R | PERM.X });
+  if (dataStart !== null && image.length > dataStart) {
+    segments.push({ addr: dataStart, bytes: image.subarray(dataStart), perms: PERM.R | PERM.W });
+  }
+  if (segments.length === 0) throw new RangeError('Empty program');
+  return spawn(machine, { segments, ...opts });
+}
