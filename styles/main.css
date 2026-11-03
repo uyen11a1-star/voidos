@@ -1,0 +1,11 @@
+:root { --bg: #0b0b0d; --panel: #16161a; --gold: #d4af37; --gray: #8a8a93; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: #e6e6ea; font-family: system-ui, sans-serif; }
+main { max-width: 640px; margin: 0 auto; padding: 16px; }
+h1 { color: var(--gold); letter-spacing: .05em; }
+h1 small { color: var(--gray); font-size: .5em; font-weight: 400; }
+#screen { background: var(--panel); border: 1px solid #2a2a30; border-radius: 8px; padding: 12px; min-height: 96px; color: var(--gold); font-family: ui-monospace, monospace; white-space: pre-wrap; }
+#status { color: var(--gray); font-family: ui-monospace, monospace; font-size: .85em; }
+.row { display: flex; gap: 8px; }
+button { flex: 1; padding: 12px; background: var(--panel); color: var(--gold); border: 1px solid var(--gold); border-radius: 8px; font-size: 1em; touch-action: manipulation; }
+button:active { background: #24242a; }
