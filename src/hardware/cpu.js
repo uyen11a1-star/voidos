@@ -48,10 +48,10 @@ export class CPU {
       const ram = this.ram;
       const ins = decodeInto(
         this._ins,
-        ram.read8(startPc),
-        ram.read8(startPc + 1),
-        ram.read8(startPc + 2),
-        ram.read8(startPc + 3),
+        ram.fetch8(startPc),
+        ram.fetch8(startPc + 1),
+        ram.fetch8(startPc + 2),
+        ram.fetch8(startPc + 3),
       );
       regs.pc = (startPc + INSTRUCTION_SIZE) & 0xffff;
       if (this.state === STATE.WAITING) this.state = STATE.RUNNING;

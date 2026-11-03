@@ -9,3 +9,5 @@ h1 small { color: var(--gray); font-size: .5em; font-weight: 400; }
 .row { display: flex; gap: 8px; }
 button { flex: 1; padding: 12px; background: var(--panel); color: var(--gold); border: 1px solid var(--gold); border-radius: 8px; font-size: 1em; touch-action: manipulation; }
 button:active { background: #24242a; }
+#memstat { color: var(--gray); font-family: ui-monospace, monospace; font-size: .85em; }
+#memdump { background: var(--panel); border: 1px solid #2a2a30; border-radius: 8px; padding: 10px; color: #cfcfd6; font-family: ui-monospace, monospace; font-size: .72em; overflow-x: auto; }
