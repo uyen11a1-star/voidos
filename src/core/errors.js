@@ -7,3 +7,8 @@ export class VoidFault extends Error {
     this.code = code;
   }
 }
+
+// Kernel-level error with a POSIX-like code (EAGAIN, ENOMEM, ESRCH, ENOSYS, EINVAL, ...).
+export class KernelError extends Error {
+  constructor(code, message) { super(message ?? code); this.name = 'KernelError'; this.code = code; }
+}

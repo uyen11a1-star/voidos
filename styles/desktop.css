@@ -1,0 +1,55 @@
+.vo-root { position: fixed; inset: 0; background: #000; overflow: hidden; font-size: 12px; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.vo-root input, .vo-root textarea, .vo-root .term-out, .vo-root .modal-msg { user-select: text; -webkit-user-select: text; }
+.vo-root button { font: inherit; color: inherit; cursor: pointer; }
+.vo-screen { position: absolute; transform-origin: 0 0; overflow: hidden; background: var(--bg); }
+.vo-wall { position: absolute; inset: 0; background: radial-gradient(ellipse at 30% 20%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 60%), linear-gradient(160deg, #101014, #050506 70%); }
+.vo-icons { position: absolute; left: 0; right: 0; top: 0; bottom: 36px; padding: 10px 6px; display: grid; grid-template-columns: repeat(auto-fill, 60px); grid-auto-rows: 66px; gap: 4px 4px; justify-content: space-around; align-content: start; pointer-events: none; }
+.vo-icon { pointer-events: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: none; border: 0; border-radius: 8px; color: var(--text); padding: 2px; }
+.vo-icon:active { background: rgba(255,255,255,.1); }
+.vo-icon-img { font-size: 26px; line-height: 1; }
+.vo-icon-name { font-size: 10px; text-align: center; max-width: 58px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 2px #000; }
+.vo-windows { position: absolute; inset: 0; pointer-events: none; }
+.vo-windows > * { pointer-events: auto; }
+.vo-taskbar { position: absolute; left: 0; right: 0; bottom: 0; height: 36px; display: flex; align-items: center; gap: 4px; padding: 0 4px; background: rgba(12,12,15,.96); border-top: 1px solid var(--accent); z-index: 9000; }
+.tb-start { width: 34px; height: 28px; border: 1px solid var(--accent); border-radius: 6px; background: var(--panel); color: var(--accent); font-size: 15px; }
+.tb-tasks { flex: 1; display: flex; gap: 3px; overflow-x: auto; min-width: 0; scrollbar-width: none; }
+.tb-task { display: flex; align-items: center; gap: 3px; flex: 0 1 84px; min-width: 30px; height: 28px; padding: 0 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; color: var(--text); }
+.tb-task.active { border-color: var(--accent); background: var(--panel2); }
+.tb-task.min { opacity: .6; }
+.tb-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+.tb-clock { padding: 0 4px; font-variant-numeric: tabular-nums; color: var(--accent); }
+.vo-start { position: absolute; left: 4px; bottom: 40px; width: min(220px, calc(100% - 8px)); max-height: calc(100% - 52px); display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--accent); border-radius: 8px; z-index: 9100; box-shadow: 0 6px 24px rgba(0,0,0,.6); }
+.start-head { display: flex; flex-direction: column; gap: 6px; padding: 8px; border-bottom: 1px solid var(--line); }
+.start-host { color: var(--accent); font-weight: 600; letter-spacing: .04em; }
+.start-search { width: 100%; padding: 6px 8px; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 6px; font: inherit; }
+.start-list { overflow-y: auto; padding: 4px; }
+.start-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px; background: none; border: 0; border-radius: 6px; text-align: left; }
+.start-item:active, .start-item:hover { background: var(--panel2); }
+.start-icon { font-size: 18px; width: 22px; text-align: center; }
+.start-empty { padding: 10px; color: var(--dim); }
+.start-foot { display: flex; gap: 6px; padding: 8px; border-top: 1px solid var(--line); }
+.start-foot .btn { flex: 1; }
+.vo-toasts { position: absolute; top: 6px; right: 6px; left: 6px; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; pointer-events: none; z-index: 9500; }
+.toast { pointer-events: auto; max-width: 100%; padding: 8px 10px; background: var(--panel2); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 6px; box-shadow: 0 3px 12px rgba(0,0,0,.5); animation: pop .18s ease-out; }
+.toast.error { border-left-color: var(--danger); } .toast.ok { border-left-color: var(--ok); }
+@keyframes pop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
+.vo-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 9800; }
+.modal-back { position: absolute; inset: 0; pointer-events: auto; background: rgba(0,0,0,.55); display: flex; align-items: center; justify-content: center; padding: 12px; }
+.modal { width: 100%; max-width: 240px; background: var(--panel); border: 1px solid var(--accent); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 8px 30px rgba(0,0,0,.7); }
+.modal-title { color: var(--accent); font-weight: 600; }
+.modal-label { color: var(--dim); }
+.modal-msg { white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow: auto; font-size: 12px; }
+.modal-input { width: 100%; padding: 8px; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 6px; font: inherit; }
+.modal-input:focus { outline: 1px solid var(--accent); }
+.modal-actions { display: flex; justify-content: flex-end; gap: 6px; }
+.ctx { position: absolute; pointer-events: auto; width: 160px; padding: 4px; background: var(--panel2); border: 1px solid var(--accent); border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,.6); }
+.ctx-item { display: block; width: 100%; padding: 8px 10px; background: none; border: 0; border-radius: 5px; text-align: left; }
+.ctx-item:hover, .ctx-item:active { background: var(--panel); }
+.ctx-item.danger { color: var(--danger); }
+.ctx-sep { height: 1px; margin: 3px 0; background: var(--line); }
+.btn { padding: 7px 12px; background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 6px; }
+.btn:active { background: var(--line); }
+.btn.primary { color: #000; background: var(--accent); border-color: var(--accent); font-weight: 600; }
+.btn.danger { color: var(--danger); border-color: var(--danger); }
+.btn.small { padding: 4px 8px; }

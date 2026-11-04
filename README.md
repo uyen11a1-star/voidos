@@ -3,11 +3,21 @@
 Máy tính ảo chạy trên trình duyệt: CPU 16 bit, RAM, storage, BIOS, kernel và hệ điều hành VoidOS tự xây từ đầu.
 
 ## Trạng thái
-- Phase 0: kiến trúc + CI/CD (GitHub Actions → GitHub Pages) ✅
-- Phase 1: CPU emulator (`src/hardware/cpu.js`, `alu.js`, `registers.js`, `instruction/instruction-set.js`) ✅
-- Phase 2: RAM vật lý (tới 16 MiB, giới hạn theo thiết bị), MMU phân trang 4 KB (R/W/X), cấp phát frame, hexdump ✅
-- Phase 3: assembler 2 pass (label, `.equ/.org/.byte/.word/.string/.ascii/.space/.data`), disassembler, báo lỗi theo dòng ✅
-- Phase 4+: xem roadmap trong spec dự án.
+- Phase 0-3: CI/CD, CPU, RAM + MMU phân trang, assembler ✅
+- Phase 4-7: filesystem VoidFS lưu bằng IndexedDB (tự sửa lỗi khi mount), BIOS → bootloader (bytecode chạy trên VoidCPU) → kernel, system call, process manager (round-robin), định dạng executable `.vx`, shell, cấu hình, sao lưu ✅
+- Phase 8: desktop (cửa sổ kéo/thu nhỏ/phóng to/đổi cỡ, taskbar, Start menu, menu chuột phải/nhấn giữ, thông báo, đồng hồ) ✅
+- Phase 9: ứng dụng Terminal, Tệp, Soạn thảo (tô màu Assembly, tự lưu bản nháp), Giám sát, Cài đặt; chạy chương trình `.vx` trong cửa sổ, cài/gỡ ứng dụng ✅
+- Phase 10: khôi phục cửa sổ sau khi tải lại, xuất/nhập sao lưu trong Cài đặt, lưu khi ẩn tab ✅
+- Phase 11-12: test đầu-cuối (boot → desktop → reboot → tải lại trang), service worker chạy offline sau lần tải đầu ✅
+
+Chưa làm: ngôn ngữ giao diện (chỉ tiếng Việt), kéo-thả tệp giữa thư mục, GPU chưa nối vào desktop (có `src/hardware/gpu.js`), tương thích đã kiểm tra bằng jsdom chứ chưa trên thiết bị thật.
+
+## Trang
+- `index.html`: bật nguồn → boot → desktop.
+- `lab.html`: phòng thí nghiệm Assembly (soạn, biên dịch, listing, hexdump RAM).
+
+## Cấu trúc
+`src/hardware` CPU/RAM/MMU/GPU · `src/instruction` ISA + assembler · `src/os` kernel, filesystem, syscalls · `src/core` boot, computer, config · `src/desktop` window manager, taskbar, start menu · `src/applications` ứng dụng · `src/storage` IndexedDB, backup · `tests/` vitest (jsdom cho giao diện).
 
 ## CPU (VoidCPU)
 16 bit, R0..R7, PC, SP, FLAGS (Z,N,C,V), không gian địa chỉ 64 KB. Lệnh 4 byte:

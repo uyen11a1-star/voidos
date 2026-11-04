@@ -1,0 +1,14 @@
+.win { position: absolute; display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 6px 22px rgba(0,0,0,.55); overflow: hidden; }
+.win.focused { border-color: var(--accent); box-shadow: 0 8px 26px rgba(0,0,0,.7); }
+.win.maximized { border-radius: 0; border-width: 0 0 1px; }
+.win-title { display: flex; align-items: center; gap: 4px; height: 28px; flex: none; padding: 0 2px 0 6px; background: var(--panel2); touch-action: none; cursor: grab; }
+.win.focused .win-title { background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 28%, var(--panel2)), var(--panel2)); }
+.win-icon { font-size: 13px; }
+.win-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; font-size: 11px; }
+.win-btn { width: 26px; height: 24px; border: 0; border-radius: 5px; background: none; color: var(--text); font-size: 13px; line-height: 1; }
+.win-btn:hover, .win-btn:active { background: var(--line); }
+.win-btn:last-child:hover { background: var(--danger); }
+.win-body { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.win-body > * { flex: 1; min-height: 0; }
+.win-resize { position: absolute; right: 0; bottom: 0; width: 18px; height: 18px; cursor: nwse-resize; touch-action: none; background: linear-gradient(135deg, transparent 55%, var(--accent) 55%, var(--accent) 62%, transparent 62%, transparent 74%, var(--accent) 74%, var(--accent) 81%, transparent 81%); opacity: .6; }
+.win.maximized .win-resize { display: none; }
