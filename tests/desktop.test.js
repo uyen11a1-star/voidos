@@ -11,9 +11,10 @@ const ptr = (el, type, x = 0, y = 0) => el.dispatchEvent(new MouseEvent(type, { 
 const type = (input, text) => { input.value = text; input.dispatchEvent(new Event('input', { bubbles: true })); };
 const key = (el, k, extra = {}) => el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, ...extra }));
 
+HTMLCanvasElement.prototype.getContext = () => null; // jsdom has no canvas
 let sys, root, desk, hooks;
 beforeEach(async () => {
-  sys = await bootSystem();
+  sys = await bootSystem({ config: { lockscreen: false, resolution: '270x480' } });
   root = document.createElement('div');
   document.body.append(root);
   hooks = { download: vi.fn(), beep: vi.fn() };
@@ -36,7 +37,7 @@ describe('desktop shell', () => {
   it('builds screen, taskbar, icons for every built-in app, and greets the user', () => {
     expect(root.classList.contains('vo-root')).toBe(true);
     expect(root.dataset.theme).toBe('gold');
-    expect([...desk.iconsEl.querySelectorAll('.vo-icon-name')].map((e) => e.textContent)).toEqual(['Terminal', 'Tệp', 'Soạn thảo', 'Giám sát', 'Cài đặt']);
+    expect([...desk.iconsEl.querySelectorAll('.vo-icon-name')].map((e) => e.textContent)).toEqual(['Trình duyệt', 'Tệp', 'Âm nhạc', 'Ảnh', 'Terminal', 'Soạn thảo', 'Máy tính', 'Giám sát', 'Cài đặt']);
     expect(desk.toasts.textContent).toMatch(/Chào mừng/);
     expect(desk.taskbar.clock.textContent).toMatch(/\d/);
   });
@@ -83,7 +84,7 @@ describe('start menu', () => {
   it('opens, lists apps, filters, launches an app and closes', () => {
     click(desk.taskbar.startBtn);
     expect(desk.startMenu.el.hidden).toBe(false);
-    expect(desk.startMenu.list.children.length).toBe(5);
+    expect(desk.startMenu.list.children.length).toBe(9);
     desk.startMenu.search.value = 'term'; desk.startMenu.render();
     expect(desk.startMenu.list.children.length).toBe(1);
     click(desk.startMenu.list.firstChild);
@@ -107,7 +108,7 @@ describe('start menu', () => {
     sys.call('sys.assemble', '/home/user/hello.asm', '/home/user/h.vx');
     sys.call('app.install', '/home/user/h.vx', 'hello', 'Xin chào');
     desk.startMenu.render();
-    expect([...desk.startMenu.list.querySelectorAll('.start-item')].map((e) => e.textContent)).toContain('🧩Xin chào');
+    expect([...desk.startMenu.list.querySelectorAll('.start-item')].map((e) => e.textContent)).toContain('Xin chào');
     expect([...desk.iconsEl.querySelectorAll('.vo-icon-name')].map((e) => e.textContent)).toContain('Xin chào');
     const p = desk.uninstall('hello');
     await answer(undefined, true);

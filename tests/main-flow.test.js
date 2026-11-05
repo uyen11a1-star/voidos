@@ -10,6 +10,8 @@ const $ = (id) => document.getElementById(id);
 const enter = (input, line) => { input.value = line; input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); };
 const terminalInput = () => document.querySelector('.vo-root .term-in');
 const T = { timeout: 15000, interval: 40 };
+HTMLCanvasElement.prototype.getContext = () => null; // jsdom has no canvas
+const unlock = () => { const l = document.querySelector('.vo-lock'); if (l && !l.hidden) l.click(); };
 
 async function loadPage() {
   document.body.innerHTML = html.match(/<body[^>]*>([\s\S]*)<\/body>/)[1];
@@ -18,6 +20,7 @@ async function loadPage() {
   // the click handler is attached once the disk is open
   await vi.waitFor(() => { $('power').click(); expect($('boot-log').textContent).toContain('VoidBIOS'); }, T);
   await vi.waitFor(() => expect($('desktop-root').hidden).toBe(false), T);
+  unlock();
 }
 const openTerminal = async () => {
   [...document.querySelectorAll('.vo-icon')].find((b) => b.title === 'Terminal').click();
@@ -40,7 +43,7 @@ describe('whole system in the page', () => {
     expect(log).toMatch(/\[bootloader\]/);
     expect(log).toMatch(/Kernel: VoidOS/);
     expect($('boot').hidden).toBe(true);
-    expect(document.querySelectorAll('.vo-icon').length).toBe(5);
+    expect(document.querySelectorAll('.vo-icon').length).toBe(9);
   });
 
   it('files written in the terminal survive reboot AND a full page reload (IndexedDB)', async () => {
@@ -50,6 +53,7 @@ describe('whole system in the page', () => {
     enter(terminalInput(), 'reboot');
     await vi.waitFor(() => expect($('desktop-root').hidden).toBe(true), T); // old desktop is gone...
     await vi.waitFor(() => expect($('desktop-root').hidden).toBe(false), T); // ...and the rebooted one is up
+    unlock();
     // session restore re-opened the terminal after the reboot
     await vi.waitFor(() => expect(terminalInput()).toBeTruthy(), T);
     enter(terminalInput(), 'cat /home/user/keep.txt');

@@ -122,7 +122,7 @@ export function openEditor(desktop, state = {}) {
   const content = h('div', { class: 'ed' },
     h('div', { class: 'ed-tools' }, tool('Mới', 'Tệp mới', newDoc), tool('Mở', 'Mở tệp', openPath), tool('Lưu', 'Lưu', save), tool('Lưu thành', 'Lưu thành', saveAs), tool('Biên dịch', 'Biên dịch .asm', build), tool('▶ Chạy', 'Biên dịch và chạy', run)),
     h('div', { class: 'ed-wrap' }, hl, ta), label);
-  win = desktop.wm.open({ appId: 'editor', title: 'Soạn thảo', icon: '📝', content, width: 250, height: 320 });
+  win = desktop.wm.open({ appId: 'editor', title: 'Soạn thảo', icon: 'editor', content, width: 250, height: 320 });
   win.getState = () => ({ path });
   win.onBeforeClose = discardOk;
   win.closers.push(() => { clearTimeout(draftTimer); writeDraft(); });

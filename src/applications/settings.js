@@ -1,9 +1,10 @@
 import { h, clear } from '../desktop/dom.js';
 import { THEMES } from '../core/config.js';
 import { safeRamLimit } from '../hardware/ram.js';
+import { WALLPAPERS, renderWallpaper } from '../desktop/wallpaper.js';
 import { fmtSize, fmtUptime } from '../desktop/format.js';
 
-const RESOLUTIONS = ['270x480', '360x640', '412x732', '480x854', '540x960', '720x1280', '640x360', '960x540', '1280x720'];
+const RESOLUTIONS = ['auto', '270x480', '360x640', '412x732', '480x854', '540x960', '720x1280', '640x360', '960x540', '1280x720'];
 const RAMS = [256, 512, 1024, 2048, 4096, 8192, 16384];
 const QUOTAS = [1024, 2048, 4096, 8192, 16384, 32768, 65536];
 const THEME_NAMES = { gold: 'Vàng kim', azure: 'Xanh lam', crimson: 'Đỏ thẫm', emerald: 'Ngọc lục', violet: 'Tím' };
@@ -22,17 +23,18 @@ export function openSettings(desktop) {
     return el;
   };
   const theme = select(THEMES, cfg.theme, (t) => THEME_NAMES[t] ?? t);
-  const res = select(RESOLUTIONS, cfg.resolution);
+  const res = select(RESOLUTIONS, cfg.resolution, (r) => (r === 'auto' ? 'Tự động (vừa màn hình)' : r));
   const ram = select(RAMS.filter((k) => k * 1024 <= safeRamLimit()), cfg.ramKB, (k) => `${k} KB`);
   const quota = select(QUOTAS, cfg.quotaKB, (k) => `${k} KB`);
   const host = h('input', { class: 'set-input', type: 'text', value: cfg.hostname, maxlength: '32', autocapitalize: 'off', spellcheck: 'false' });
   const fast = h('input', { type: 'checkbox' }); fast.checked = cfg.fastBoot;
   const c24 = h('input', { type: 'checkbox' }); c24.checked = cfg.clock24;
+  const lock = h('input', { type: 'checkbox' }); lock.checked = cfg.lockscreen;
   const vol = h('input', { type: 'range', min: '0', max: '100', step: '5', value: String(cfg.volume ?? 50), 'aria-label': 'Âm lượng' });
   const field = (label, el) => h('label', { class: 'set-field' }, h('span', { text: label }), el);
 
   async function apply() {
-    const next = { theme: theme.value, resolution: res.value, ramKB: Number(ram.value), quotaKB: Number(quota.value), hostname: host.value.trim(), fastBoot: fast.checked, clock24: c24.checked, volume: Number(vol.value) };
+    const next = { theme: theme.value, resolution: res.value, ramKB: Number(ram.value), quotaKB: Number(quota.value), hostname: host.value.trim(), fastBoot: fast.checked, clock24: c24.checked, volume: Number(vol.value), lockscreen: lock.checked };
     const cur = sys('sys.config');
     const patch = Object.fromEntries(Object.entries(next).filter(([k, v]) => cur[k] !== v));
     if (!Object.keys(patch).length) return desktop.notify('Không có thay đổi', { level: 'info' });
@@ -43,6 +45,17 @@ export function openSettings(desktop) {
       if (r.needsReboot) { clear(banner); banner.append('Dung lượng RAM chỉ đổi sau khi khởi động lại. ', h('button', { class: 'btn small', type: 'button', text: 'Khởi động lại', onclick: () => sys('sys.power', 'reboot') })); }
     } catch (e) { fail(e); }
   }
+
+  const gallery = h('div', { class: 'set-walls', role: 'listbox', 'aria-label': 'Hình nền' });
+  const wallBtn = (id, name) => {
+    const cv = h('canvas', { width: '54', height: '96', 'aria-hidden': 'true' });
+    renderWallpaper(id, cv, 54, 96);
+    return h('button', { class: `set-wall${(sys('sys.config').wallpaper ?? '') === `gen:${id}` ? ' on' : ''}`, type: 'button', role: 'option', title: name, 'aria-label': name, dataset: { id }, onclick: () => {
+      try { sys('sys.setConfig', { wallpaper: `gen:${id}` }); for (const b of gallery.children) b.classList.toggle('on', b.dataset.id === id); } catch (e) { fail(e); }
+    } }, cv);
+  };
+  for (const w of WALLPAPERS) gallery.append(wallBtn(w.id, w.name));
+  gallery.append(h('button', { class: 'set-wall mine', type: 'button', title: 'Chọn ảnh của tôi', onclick: () => desktop.openApp('photos') }, h('span', { text: '＋' }), h('small', { text: 'Ảnh của tôi' })));
 
   const infoBox = h('div', { class: 'set-info' });
   function refreshInfo() {
@@ -83,20 +96,22 @@ export function openSettings(desktop) {
 
   const content = h('div', { class: 'set' },
     banner,
-    h('h4', { text: 'Hiển thị' }), field('Giao diện', theme), field('Độ phân giải', res),
+    h('h4', { text: 'Hình nền' }), gallery,
+    h('h4', { text: 'Hiển thị' }), field('Màu nhấn', theme), field('Độ phân giải', res),
     h('h4', { text: 'Phần cứng ảo' }), field('RAM', ram), field('Dung lượng ổ đĩa', quota),
     h('h4', { text: 'Hệ thống' }), field('Tên máy', host),
     h('label', { class: 'set-check' }, fast, h('span', { text: 'Khởi động nhanh (bỏ qua hiệu ứng chờ)' })),
     h('label', { class: 'set-check' }, c24, h('span', { text: 'Đồng hồ 24 giờ' })),
+    h('label', { class: 'set-check' }, lock, h('span', { text: 'Hiện màn hình khóa khi mở máy' })),
     field('Âm lượng thông báo', vol),
     h('div', { class: 'set-actions' }, h('button', { class: 'btn primary', type: 'button', text: 'Áp dụng', onclick: apply })),
     h('h4', { text: 'Thông tin máy' }), infoBox,
     h('h4', { text: 'Sao lưu' }),
     h('div', { class: 'set-actions' }, h('button', { class: 'btn', type: 'button', text: 'Xuất sao lưu', onclick: exportBackup }), h('button', { class: 'btn', type: 'button', text: 'Khôi phục…', onclick: () => fileInput.click() }), fileInput));
-  const win = desktop.wm.open({ appId: 'settings', title: 'Cài đặt', icon: '⚙️', content, width: 250, height: 330 });
+  const win = desktop.wm.open({ appId: 'settings', title: 'Cài đặt', icon: 'settings', content, width: 250, height: 330 });
   const timer = setInterval(() => { if (!win.minimized) refreshInfo(); }, 2000);
   win.closers.push(() => clearInterval(timer));
-  win.api = { apply, exportBackup, importBackup, refreshInfo, fields: { theme, res, ram, quota, host, fast, c24, vol }, banner };
+  win.api = { apply, exportBackup, importBackup, refreshInfo, fields: { theme, res, ram, quota, host, fast, c24, vol, lock }, gallery, banner };
   refreshInfo();
   return win;
 }

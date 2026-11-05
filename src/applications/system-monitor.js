@@ -43,7 +43,7 @@ export function openMonitor(desktop) {
     row('RAM ', ramText, ramBar), row('Ổ đĩa ', diskText, diskBar),
     h('div', { class: 'mon-row' }, h('b', { text: 'Uptime ' }), up, h('b', { text: '  Chu kỳ CPU ' }), cyc),
     table);
-  const win = desktop.wm.open({ appId: 'monitor', title: 'Giám sát', icon: '📊', content, width: 250, height: 320 });
+  const win = desktop.wm.open({ appId: 'monitor', title: 'Giám sát', icon: 'monitor', content, width: 250, height: 320 });
   const timer = setInterval(() => { if (!win.minimized) refresh(); }, 1000);
   win.closers.push(() => clearInterval(timer));
   win.refresh = refresh;

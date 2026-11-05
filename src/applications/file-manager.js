@@ -2,8 +2,9 @@ import { h, clear } from '../desktop/dom.js';
 import { onLongPress } from '../desktop/context-menu.js';
 import { normalizePath } from '../os/filesystem.js';
 import { fmtSize, fmtTime, baseName, dirName, PROTECTED } from '../desktop/format.js';
+import { isAudioFile } from '../desktop/audio.js';
 
-const iconFor = (it) => (it.type === 'dir' ? '📁' : /\.vx$/i.test(it.name) ? '⚙️' : /\.asm$/i.test(it.name) ? '📝' : '📄');
+const iconFor = (it) => (it.type === 'dir' ? '📁' : /\.vx$/i.test(it.name) ? '⚙️' : /\.asm$/i.test(it.name) ? '📝' : isAudioFile(it.name) ? '🎵' : /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(it.name) ? '🖼️' : /\.html?$/i.test(it.name) ? '🌐' : '📄');
 
 export function openFileManager(desktop, state = {}) {
   const sys = desktop.sys;
@@ -60,7 +61,13 @@ export function openFileManager(desktop, state = {}) {
   function open(it) {
     if (it.type === 'dir') go(it.path);
     else if (/\.vx$/i.test(it.name)) desktop.runProgram(it.path);
-    else desktop.openApp('editor', { path: it.path });
+    else if (/\.(html?|png|jpe?g|gif|webp|bmp)$/i.test(it.name)) desktop.openApp('browser', { url: `vfs://${it.path}` });
+    else if (isAudioFile(it.name)) {
+      let siblings = [];
+      try { siblings = sys('fs.list', dirName(it.path)).filter((f) => f.type === 'file' && isAudioFile(f.name)).map((f) => f.path); } catch { /* play just this one */ }
+      desktop.audio.setQueue(siblings);
+      desktop.audio.play({ type: 'file', path: it.path });
+    } else desktop.openApp('editor', { path: it.path });
   }
 
   const current = () => (selected ? sys('fs.stat', selected) : null);
@@ -138,7 +145,7 @@ export function openFileManager(desktop, state = {}) {
       tool('📋', 'Sao chép', () => copyOrCut('copy')), tool('✂️', 'Cắt', () => copyOrCut('cut')), tool('📥', 'Dán', paste),
       tool('🗑', 'Xóa', remove), tool('ℹ️', 'Thông tin', info)),
     list, status);
-  win = desktop.wm.open({ appId: 'files', title: 'Tệp', icon: '📁', content, width: 250, height: 320 });
+  win = desktop.wm.open({ appId: 'files', title: 'Tệp', icon: 'files', content, width: 250, height: 320 });
   win.getState = () => ({ cwd });
   win.api = { go, render, select: (p) => { selected = p; render(); }, newFolder, newFile, rename, paste, remove, copyOrCut };
   render();

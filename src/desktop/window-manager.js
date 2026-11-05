@@ -1,4 +1,5 @@
 import { h, clamp } from './dom.js';
+import { renderIcon } from './icons.js';
 
 export const TITLE_H = 28;
 const MIN_W = 130, MIN_H = 90;
@@ -15,19 +16,19 @@ export class WindowManager {
   list() { return [...this.wins]; }
   top() { return [...this.wins].reverse().find((w) => !w.minimized) ?? null; }
 
-  open({ appId = null, title, icon = '', content, width = 230, height = 300, x, y }) {
+  open({ appId = null, title, icon = '', content, width = 230, height = 300, x, y, maximized = false }) {
     const b = this.bounds();
     const w = Math.min(width, b.w), hh = Math.min(height, b.h);
     const n = this.wins.length % 6;
     const win = {
       id: nextId++, appId, title, icon, w, h: hh, x: x ?? Math.min(6 + n * 14, Math.max(0, b.w - w)), y: y ?? Math.min(6 + n * 14, Math.max(0, b.h - hh)),
-      minimized: false, maximized: false, closers: [], getState: null, onBeforeClose: null, el: null, titleEl: null,
+      minimized: false, maximized: !!maximized, closers: [], getState: null, onBeforeClose: null, el: null, titleEl: null,
     };
     const btn = (label, text, fn) => h('button', { class: 'win-btn', type: 'button', title: label, 'aria-label': label, text, onclick: fn, onpointerdown: (e) => e.stopPropagation() });
     win.titleEl = h('span', { class: 'win-name', text: title });
     win.el = h('div', { class: 'win', role: 'dialog', 'aria-label': title, dataset: { id: win.id } },
       h('div', { class: 'win-title', onpointerdown: (e) => this._drag(win, e), ondblclick: () => this.toggleMaximize(win) },
-        h('span', { class: 'win-icon', text: icon }), win.titleEl,
+        renderIcon(icon, 'win-icon'), win.titleEl,
         btn('Thu nhỏ', '–', () => this.minimize(win)), btn('Phóng to', '□', () => this.toggleMaximize(win)), btn('Đóng', '✕', () => this.close(win))),
       h('div', { class: 'win-body' }, content),
       h('div', { class: 'win-resize', onpointerdown: (e) => this._resize(win, e) }));

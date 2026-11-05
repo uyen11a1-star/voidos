@@ -27,7 +27,7 @@ export function openProcessApp(desktop, { path, name = baseName(path) }) {
   };
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
   const content = h('div', { class: 'term' }, out, h('div', { class: 'term-row' }, h('span', { class: 'term-prompt', text: '›' }), input));
-  win = desktop.wm.open({ title: name, icon: '🧩', content, width: 230, height: 240 });
+  win = desktop.wm.open({ title: name, icon: 'program', content, width: 230, height: 240 });
   win.pid = pid;
   win.closers.push(() => { if (alive) { try { desktop.sys('proc.kill', pid); } catch { /* already gone */ } } });
   return win;

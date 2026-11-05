@@ -1,4 +1,5 @@
 import { h, clear } from './dom.js';
+import { renderIcon } from './icons.js';
 
 export const TASKBAR_H = 36;
 
@@ -8,7 +9,8 @@ export class Taskbar {
     this.startBtn = h('button', { class: 'tb-start', type: 'button', 'aria-label': 'Menu Start', text: '◆', onclick: () => desktop.startMenu.toggle() });
     this.tasks = h('div', { class: 'tb-tasks' });
     this.clock = h('span', { class: 'tb-clock' });
-    this.el = h('div', { class: 'vo-taskbar' }, this.startBtn, this.tasks, this.clock);
+    this.music = h('button', { class: 'tb-music', type: 'button', text: '♪', title: 'Nhạc nền', 'aria-label': 'Phát hoặc tạm dừng nhạc', onclick: () => desktop.toggleMusic() });
+    this.el = h('div', { class: 'vo-taskbar' }, this.startBtn, this.tasks, h('div', { class: 'tb-tray' }, this.music, this.clock));
   }
 
   update() {
@@ -19,7 +21,14 @@ export class Taskbar {
       this.tasks.append(h('button', {
         class: `tb-task${win === top ? ' active' : ''}${win.minimized ? ' min' : ''}`, type: 'button', title: win.title,
         onclick: () => { if (win.minimized || win !== top) wm.focus(win); else wm.minimize(win); },
-      }, h('span', { text: win.icon }), h('span', { class: 'tb-label', text: win.title })));
+      }, renderIcon(win.icon, 'tb-ic'), h('span', { class: 'tb-label', text: win.title })));
     }
+  }
+
+  // Music button in the tray: shows play/pause and the current track.
+  setMusic(info) {
+    this.music.textContent = info.playing ? '⏸' : '♪';
+    this.music.classList.toggle('playing', info.playing);
+    this.music.title = info.playing ? `Đang phát: ${info.title}` : info.title ? `Tạm dừng: ${info.title}` : 'Nhạc nền';
   }
 }

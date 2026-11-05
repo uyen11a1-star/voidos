@@ -36,7 +36,7 @@ export function openTerminal(desktop, state = {}) {
     h('div', { class: 'term-keys' }, btn('↑', 'Lệnh trước', () => hist(-1)), btn('↓', 'Lệnh sau', () => hist(1)), btn('^C', 'Dừng chương trình', () => sh.interrupt()), btn('Enter', 'Chạy', submit)));
   write(`VoidOS ${desktop.sys('sys.info').version} - gõ help để xem lệnh\n`);
   showPrompt();
-  const win = desktop.wm.open({ appId: 'terminal', title: 'Terminal', icon: '⌨️', content, width: 250, height: 320 });
+  const win = desktop.wm.open({ appId: 'terminal', title: 'Terminal', icon: 'terminal', content, width: 250, height: 320 });
   win.getState = () => ({ cwd: sh.cwd });
   win.closers.push(() => sh.interrupt());
   win.shell = sh;

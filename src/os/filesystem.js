@@ -3,7 +3,7 @@
 import { isBytes } from '../core/bytes.js';
 
 export const BLOCK = 512;
-export const MAX_FILE = 1024 * 1024;
+export const MAX_FILE = 16 * 1024 * 1024; // big enough for a song or a photo; the disk quota still bounds the total
 export const MAX_NAME = 128;
 export const MAX_DEPTH = 24;
 export const MAX_NODES = 20000;

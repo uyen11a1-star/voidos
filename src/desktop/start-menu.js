@@ -1,4 +1,5 @@
 import { h, clear } from './dom.js';
+import { renderIcon } from './icons.js';
 import { onLongPress } from './context-menu.js';
 
 // Application launcher: built-in and installed apps, search, power buttons.
@@ -13,6 +14,7 @@ export class StartMenu {
       h('div', { class: 'start-head' }, this.host, this.search),
       this.list,
       h('div', { class: 'start-foot' },
+        h('button', { class: 'btn start-lock', type: 'button', text: '🔒 Khóa màn hình', onclick: () => { this.close(); this.desktop.lock(); } }),
         h('button', { class: 'btn', type: 'button', text: '↻ Khởi động lại', onclick: () => this._power('reboot') }),
         h('button', { class: 'btn danger', type: 'button', text: '⏻ Tắt máy', onclick: () => this._power('shutdown') })));
   }
@@ -23,7 +25,7 @@ export class StartMenu {
     clear(this.list);
     for (const app of this.desktop.allApps().filter((a) => a.name.toLowerCase().includes(q))) {
       const item = h('button', { class: 'start-item', type: 'button', onclick: () => { this.close(); this.desktop.openApp(app.id); } },
-        h('span', { class: 'start-icon', text: app.icon }), h('span', { text: app.name }));
+        renderIcon(app.icon, 'start-icon'), h('span', { text: app.name }));
       if (app.installed) onLongPress(item, (e) => this.desktop.menu(e, [{ label: 'Gỡ cài đặt', danger: true, action: () => this.desktop.uninstall(app.id) }]));
       this.list.append(item);
     }

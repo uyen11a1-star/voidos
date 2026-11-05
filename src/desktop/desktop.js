@@ -6,11 +6,34 @@ import { showPrompt, showConfirm } from './dialogs.js';
 import { showContextMenu, onLongPress } from './context-menu.js';
 import { BUILTIN_APPS } from './apps.js';
 import { openProcessApp } from '../applications/process-app.js';
+import { AudioService, STATIONS } from './audio.js';
+import { renderWallpaper, drawCover, DEFAULT_WALLPAPER } from './wallpaper.js';
+import { processImageFile, imageExt, IMAGE_EXT, isImageFile } from './image-utils.js';
+import { renderIcon } from './icons.js';
 
 const SESSION = '/etc/session.json';
+const MUSIC_STATE = '/home/user/.music.json';
+const TIP_MARK = '/etc/.tip-resolution';
 const SCHEDULER_MS = 25;
+const WALL_PIXEL_CAP = 1_300_000;
 
-// The VoidOS desktop: wallpaper, icons, windows, taskbar, start menu, notifications, dialogs.
+const loadImage = (url) => new Promise((resolve, reject) => {
+  const img = new Image();
+  img.onload = () => resolve(img);
+  img.onerror = () => reject(new Error('Không đọc được ảnh'));
+  img.src = url;
+});
+
+// Only accept music sources we know how to play (the saved file could be edited by anyone).
+function cleanSource(s) {
+  if (!s || typeof s !== 'object') return null;
+  if (s.type === 'gen' && STATIONS.some((x) => x.id === s.id)) return { type: 'gen', id: s.id };
+  if (s.type === 'file' && typeof s.path === 'string' && s.path.startsWith('/')) return { type: 'file', path: s.path };
+  if (s.type === 'url' && typeof s.url === 'string' && /^https?:\/\//i.test(s.url)) return { type: 'url', url: s.url };
+  return null;
+}
+
+// The VoidOS desktop: wallpaper, widgets, icons, windows, taskbar, start menu, lock screen, notifications.
 // It talks to the system only through kernel.call (the same syscalls the shell uses).
 export class Desktop {
   constructor({ kernel, root, hooks = {} }) {
@@ -21,15 +44,20 @@ export class Desktop {
     this.clipboard = null;
     this.unsubs = [];
     this.scale = 1;
-    this.size = { w: 270, h: 480 };
+    this.size = { w: 360, h: 640 };
     this.config = this.sys('sys.config');
+    this.audio = new AudioService({ readBytes: (p) => this.sys('fs.readBytes', p), volume: this.config.musicVolume, ...(hooks.audio ?? {}) });
     this._build();
-    this.applyConfig(this.config);
+    this.applyConfig(this.config, true);
     this.unsubs.push(kernel.events.on('config:change', ({ config }) => this.applyConfig(config)));
     this.unsubs.push(kernel.events.on('apps:change', () => this.refreshApps()));
+    this.unsubs.push(this.audio.on((info) => this.taskbar.setMusic(info)));
     this._loop = setInterval(() => this._tick(), SCHEDULER_MS);
     this._clockTimer = setInterval(() => this._tickClock(), 1000);
-    if (!this.restoreSession()) this.notify('Chào mừng đến VoidOS! Bấm ◆ để mở menu.', { level: 'info' });
+    this._welcome = !this.restoreSession();
+    this._resolutionTip();
+    this._armAutoplay();
+    if (this.config.lockscreen) this.lock(); else this._greet();
   }
 
   // ---------- construction ----------
@@ -37,11 +65,21 @@ export class Desktop {
     const { root } = this;
     root.classList.add('vo-root');
     clear(root);
-    this.wall = h('div', { class: 'vo-wall' });
+    this.wallCanvas = h('canvas', { class: 'vo-wall-canvas', 'aria-hidden': 'true' });
+    this.wall = h('div', { class: 'vo-wall' }, this.wallCanvas);
+    this.wTime = h('div', { class: 'w-time' });
+    this.wDate = h('div', { class: 'w-date' });
+    this.widget = h('div', { class: 'vo-widget' }, this.wTime, this.wDate);
     this.iconsEl = h('div', { class: 'vo-icons' });
     this.layer = h('div', { class: 'vo-windows' });
     this.toasts = h('div', { class: 'vo-toasts', 'aria-live': 'polite' });
     this.overlay = h('div', { class: 'vo-overlay' });
+    this.lockTime = h('div', { class: 'lk-time' });
+    this.lockDate = h('div', { class: 'lk-date' });
+    this.lockEl = h('div', { class: 'vo-lock', hidden: true, tabindex: '0', role: 'dialog', 'aria-label': 'Màn hình khóa' },
+      this.lockTime, this.lockDate, h('div', { class: 'lk-hint', text: 'Chạm hoặc nhấn Enter để mở khóa' }));
+    this.lockEl.addEventListener('click', () => this.unlock());
+    this.lockEl.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.unlock(); } });
     this.screen = h('div', { class: 'vo-screen' });
     this.wm = new WindowManager({
       layer: this.layer,
@@ -51,11 +89,12 @@ export class Desktop {
     });
     this.taskbar = new Taskbar(this);
     this.startMenu = new StartMenu(this);
-    this.screen.append(this.wall, this.iconsEl, this.layer, this.startMenu.el, this.taskbar.el, this.toasts, this.overlay);
+    this.screen.append(this.wall, this.widget, this.iconsEl, this.layer, this.startMenu.el, this.taskbar.el, this.toasts, this.overlay, this.lockEl);
     root.append(this.screen);
     onLongPress(this.wall, (e) => this.menu(e, [
-      { label: 'Mở Terminal', action: () => this.openApp('terminal') }, { label: 'Mở Tệp', action: () => this.openApp('files') },
-      { label: 'Cài đặt', action: () => this.openApp('settings') }, 'sep', { label: 'Làm mới', action: () => this.refreshApps() },
+      { label: 'Mở Trình duyệt', action: () => this.openApp('browser') }, { label: 'Mở Terminal', action: () => this.openApp('terminal') },
+      { label: 'Mở Tệp', action: () => this.openApp('files') }, { label: 'Đổi hình nền…', action: () => this.openApp('settings') },
+      'sep', { label: 'Khóa màn hình', action: () => this.lock() }, { label: 'Làm mới', action: () => this.refreshApps() },
     ]));
     this.screen.addEventListener('pointerdown', (e) => {
       if (this.startMenu.isOpen && !this.startMenu.el.contains(e.target) && !this.taskbar.startBtn.contains(e.target)) this.startMenu.close();
@@ -67,25 +106,64 @@ export class Desktop {
     this.refreshApps();
   }
 
-  applyConfig(cfg) {
+  applyConfig(cfg, force = false) {
+    const prev = force ? {} : this.config;
     this.config = cfg;
     this.root.dataset.theme = cfg.theme;
     this._fit();
+    this.applyWallpaper();
+    if (prev.musicVolume !== cfg.musicVolume) this.audio.setVolume(cfg.musicVolume);
     this.startMenu.render();
     this._tickClock();
   }
 
-  // The screen has a fixed logical resolution (Settings) and is scaled to fit the window.
+  // 'auto' = the desktop is exactly as big as the window (like a real PC); otherwise a fixed
+  // logical resolution that is scaled to fit.
   _fit() {
-    const [w, hh] = String(this.config.resolution).split('x').map(Number);
-    this.size = { w, h: hh };
     const aw = this.root.clientWidth, ah = this.root.clientHeight;
-    this.scale = aw > 0 && ah > 0 ? Math.min(aw / w, ah / hh) : 1;
-    Object.assign(this.screen.style, {
-      width: `${w}px`, height: `${hh}px`, transform: `scale(${this.scale})`,
-      left: `${aw > 0 ? (aw - w * this.scale) / 2 : 0}px`, top: `${ah > 0 ? (ah - hh * this.scale) / 2 : 0}px`,
-    });
+    let w, hh, scale = 1, left = 0, top = 0;
+    if (this.config.resolution === 'auto') {
+      w = Math.max(240, aw > 0 ? aw : 360); hh = Math.max(320, ah > 0 ? ah : 640);
+    } else {
+      [w, hh] = String(this.config.resolution).split('x').map(Number);
+      if (aw > 0 && ah > 0) { scale = Math.min(aw / w, ah / hh); left = (aw - w * scale) / 2; top = (ah - hh * scale) / 2; }
+    }
+    const next = { w: Math.round(w), h: Math.round(hh) };
+    const changed = next.w !== this.size.w || next.h !== this.size.h || scale !== this.scale;
+    this.size = next; this.scale = scale;
+    Object.assign(this.screen.style, { width: `${next.w}px`, height: `${next.h}px`, transform: scale === 1 ? '' : `scale(${scale})`, left: `${left}px`, top: `${top}px` });
     this.wm.fit();
+    if (changed && this.wall) { clearTimeout(this._wallTimer); this._wallTimer = setTimeout(() => this.applyWallpaper(), 150); }
+  }
+
+  applyWallpaper() {
+    const cfg = this.config.wallpaper ?? DEFAULT_WALLPAPER;
+    const dpr = Math.min(2, globalThis.devicePixelRatio || 1);
+    let pw = Math.round(this.size.w * this.scale * dpr), ph = Math.round(this.size.h * this.scale * dpr);
+    if (pw * ph > WALL_PIXEL_CAP) { const k = Math.sqrt(WALL_PIXEL_CAP / (pw * ph)); pw = Math.round(pw * k); ph = Math.round(ph * k); }
+    pw = Math.max(64, pw); ph = Math.max(64, ph);
+    const key = `${cfg}|${pw}x${ph}`;
+    if (key === this._wallKey) return;
+    this._wallKey = key;
+    this.wall.dataset.wallpaper = cfg;
+    if (cfg.startsWith('file:')) this._wallpaperFromFile(cfg.slice(5), pw, ph, key);
+    else renderWallpaper(cfg.slice(4), this.wallCanvas, pw, ph);
+  }
+
+  async _wallpaperFromFile(path, pw, ph, key) {
+    let url = null;
+    try {
+      const ext = imageExt(path);
+      if (!IMAGE_EXT[ext]) throw new Error('not an image');
+      url = URL.createObjectURL(new Blob([this.sys('fs.readBytes', path)], { type: IMAGE_EXT[ext] }));
+      const img = await (this.hooks.loadImage ?? loadImage)(url);
+      if (key === this._wallKey) drawCover(this.wallCanvas, img, pw, ph);
+    } catch {
+      if (key !== this._wallKey) return;
+      this._wallKey = '';
+      this.notify('Không đọc được ảnh nền, dùng hình mặc định', { level: 'warn' });
+      renderWallpaper('voidgold', this.wallCanvas, pw, ph);
+    } finally { if (url) URL.revokeObjectURL(url); }
   }
 
   _tick() {
@@ -95,21 +173,69 @@ export class Desktop {
   }
 
   _tickClock() {
-    const t = new Date(this.kernel.clock()).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: !this.config.clock24 });
-    this.taskbar.clock.textContent = t;
+    const d = new Date(this.kernel.clock());
+    const time = d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: !this.config.clock24 });
+    const date = d.toLocaleDateString('vi-VN', { weekday: 'long', day: 'numeric', month: 'long' });
+    this.taskbar.clock.textContent = time;
+    this.wTime.textContent = this.lockTime.textContent = time;
+    this.wDate.textContent = this.lockDate.textContent = date;
+  }
+
+  // ---------- lock screen ----------
+  lock() {
+    this.startMenu.close();
+    this._tickClock();
+    this.lockEl.hidden = false;
+    this.lockEl.focus?.();
+  }
+
+  unlock() {
+    if (this.lockEl.hidden) return;
+    this.lockEl.hidden = true;
+    this._greet();
+  }
+
+  get locked() { return !this.lockEl.hidden; }
+
+  _greet() {
+    if (!this._welcome) return;
+    this._welcome = false;
+    this.notify('Chào mừng đến VoidOS! Bấm ◆ để mở menu.', { level: 'info' });
+  }
+
+  _resolutionTip() {
+    try {
+      if (this.config.resolution !== '270x480' || this.sys('fs.exists', TIP_MARK)) return;
+      this.sys('fs.write', TIP_MARK, '1');
+      this.notify('Mẹo: Cài đặt → Độ phân giải → "Tự động" để desktop vừa khít màn hình.', { level: 'info', ms: 7000 });
+    } catch { /* tips are optional */ }
+  }
+
+  // ---------- music ----------
+  savedMusic() {
+    try { return cleanSource(JSON.parse(this.sys('fs.read', MUSIC_STATE)).source); } catch { return null; }
+  }
+
+  toggleMusic() { return this.audio.toggle(this.savedMusic() ?? { type: 'gen', id: STATIONS[0].id }); }
+
+  // Browsers only allow sound after a user gesture: start at the first tap if "autoplay" is on.
+  _armAutoplay() {
+    if (!this.config.musicAutoplay) return;
+    this._autoplay = () => { this.root.removeEventListener('pointerdown', this._autoplay, true); this._autoplay = null; if (!this.audio.info().source) this.toggleMusic(); };
+    this.root.addEventListener('pointerdown', this._autoplay, true);
   }
 
   // ---------- apps ----------
   installed() { try { return this.sys('app.list'); } catch { return []; } }
 
   allApps() {
-    return [...BUILTIN_APPS.map(({ id, name, icon }) => ({ id, name, icon })), ...this.installed().map((a) => ({ id: a.id, name: a.name ?? a.id, icon: '🧩', installed: true }))];
+    return [...BUILTIN_APPS.map(({ id, name, icon }) => ({ id, name, icon })), ...this.installed().map((a) => ({ id: a.id, name: a.name ?? a.id, icon: 'program', installed: true }))];
   }
 
   refreshApps() {
     clear(this.iconsEl);
     for (const app of this.allApps()) {
-      const b = h('button', { class: 'vo-icon', type: 'button', title: app.name, onclick: () => this.openApp(app.id) }, h('span', { class: 'vo-icon-img', text: app.icon }), h('span', { class: 'vo-icon-name', text: app.name }));
+      const b = h('button', { class: 'vo-icon', type: 'button', title: app.name, onclick: () => this.openApp(app.id) }, renderIcon(app.icon, 'vo-icon-img'), h('span', { class: 'vo-icon-name', text: app.name }));
       if (app.installed) onLongPress(b, (e) => this.menu(e, [{ label: 'Gỡ cài đặt', danger: true, action: () => this.uninstall(app.id) }]));
       this.iconsEl.append(b);
     }
@@ -135,6 +261,9 @@ export class Desktop {
     if (!(await this.confirm({ message: `Gỡ cài đặt "${id}"?`, okText: 'Gỡ', danger: true }))) return;
     try { this.sys('app.uninstall', id); this.notify(`Đã gỡ "${id}"`, { level: 'ok' }); } catch (e) { this.notify(e.message, { level: 'error' }); }
   }
+
+  processImage(file) { return (this.hooks.processImage ?? processImageFile)(file); }
+  isImage(path) { return isImageFile(path); }
 
   // ---------- UI services ----------
   toScreen(e) {
@@ -214,10 +343,12 @@ export class Desktop {
 
   destroy() {
     this.saveSession();
-    clearInterval(this._loop); clearInterval(this._clockTimer);
+    clearInterval(this._loop); clearInterval(this._clockTimer); clearTimeout(this._wallTimer);
+    if (this._autoplay) this.root.removeEventListener('pointerdown', this._autoplay, true);
     for (const u of this.unsubs) u();
     this.ro?.disconnect();
     window.removeEventListener('resize', this._onResize);
+    this.audio.dispose();
     this.wm.closeAll();
     clear(this.root);
     this.root.classList.remove('vo-root');

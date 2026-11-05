@@ -7,7 +7,7 @@ import { validatePatch, HARDWARE_KEYS } from '../core/config.js';
 import { exportBackup, importBackup } from '../storage/backup.js';
 
 const FAIL = 0xffff;
-const RESERVED_APPS = ['terminal', 'files', 'editor', 'monitor', 'settings'];
+const RESERVED_APPS = ['terminal', 'files', 'editor', 'monitor', 'settings', 'browser', 'music', 'photos', 'calculator'];
 const dec = new TextDecoder();
 const base = (p) => p.split('/').filter(Boolean).pop() ?? p;
 
