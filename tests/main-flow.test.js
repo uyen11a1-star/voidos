@@ -43,7 +43,7 @@ describe('whole system in the page', () => {
     expect(log).toMatch(/\[bootloader\]/);
     expect(log).toMatch(/Kernel: VoidOS/);
     expect($('boot').hidden).toBe(true);
-    expect(document.querySelectorAll('.vo-icon').length).toBe(9);
+    expect(document.querySelectorAll('.vo-icon').length).toBe(10);
   });
 
   it('files written in the terminal survive reboot AND a full page reload (IndexedDB)', async () => {

@@ -7,10 +7,12 @@ import { openBrowser } from '../applications/browser.js';
 import { openMusic } from '../applications/music.js';
 import { openPhotos } from '../applications/photos.js';
 import { openCalculator } from '../applications/calculator.js';
+import { openVideo } from '../applications/video.js';
 
 // Built-in applications (ids are reserved: installed programs cannot reuse them). icon = id in icons.js.
 export const BUILTIN_APPS = [
   { id: 'browser', name: 'Trình duyệt', icon: 'browser', open: openBrowser },
+  { id: 'video', name: 'Video', icon: 'video', open: openVideo },
   { id: 'files', name: 'Tệp', icon: 'files', open: openFileManager },
   { id: 'music', name: 'Âm nhạc', icon: 'music', open: openMusic },
   { id: 'photos', name: 'Ảnh', icon: 'photos', open: openPhotos },

@@ -12,7 +12,9 @@ Máy tính ảo chạy trên trình duyệt: CPU 16 bit, RAM, storage, BIOS, ker
 
 - Phase 13 (PC thật để dùng): trình duyệt nhiều tab (dấu trang, lịch sử, YouTube nhúng, mở trang cục bộ trong sandbox), trình phát nhạc nền (4 đài tổng hợp bằng WebAudio + nhạc từ ổ đĩa + stream URL, nút trên taskbar), 8 hình nền vẽ bằng code + ảnh của tôi, Ảnh, Máy tính, màn hình khóa, đồng hồ trên nền, icon SVG, giao diện kính mờ, độ phân giải "Tự động" ✅
 
-Giới hạn đã biết: trình duyệt chạy trang web bằng iframe nên **nhiều trang chặn nhúng** (Google, Facebook, GitHub...); các trang đó mở ở tab ngoài. Wikipedia và video YouTube (dán link) hiển thị tại chỗ. Quay lại/Tiến chỉ theo trang mở từ thanh địa chỉ. Chưa có ngôn ngữ giao diện khác tiếng Việt, kéo-thả tệp, GPU chưa nối vào desktop; chưa kiểm tra trên thiết bị thật (cảm ứng, âm thanh nghe bằng tai).
+- Phase 14: app **Video** (YouTube trong VoidOS: trang chủ thịnh hành + tìm kiếm qua YouTube Data API bằng key miễn phí của người dùng, phát bằng trình phát nhúng chính thức, yêu thích, lịch sử), **chuột ảo** (touchpad nổi + con trỏ, nhấp/nhấp đúp/chuột phải/giữ-kéo/cuộn), **Cỡ giao diện** (phóng to nút và chữ), sửa lỗi YouTube "Error 153" khi nhúng không có referrer ✅
+
+Giới hạn đã biết: trình duyệt chạy trang web bằng iframe nên **nhiều trang chặn nhúng** (Google, Facebook, GitHub...); các trang đó mở ở tab ngoài. Wikipedia hiển thị tại chỗ; YouTube dùng app Video. Chuột ảo không nhấp được vào bên trong trang web trong khung (cross-origin), hãy chạm trực tiếp. Video cần API key (Cài đặt → Hệ thống); key nằm trên ổ đĩa ảo và trong bản sao lưu; Google giới hạn khoảng 100 lượt tìm kiếm mỗi ngày. Quay lại/Tiến chỉ theo trang mở từ thanh địa chỉ. Chưa có ngôn ngữ giao diện khác tiếng Việt, kéo-thả tệp, GPU chưa nối vào desktop; chưa kiểm tra trên thiết bị thật (cảm ứng, âm thanh nghe bằng tai, YouTube API từ trình duyệt).
 
 ## Trang
 - `index.html`: bật nguồn → boot → desktop.

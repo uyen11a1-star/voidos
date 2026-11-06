@@ -2,7 +2,7 @@
 const TILES = {
   terminal: ['#4b5563', '#111827'], files: ['#fbbf24', '#f97316'], editor: ['#60a5fa', '#2563eb'], monitor: ['#34d399', '#059669'],
   settings: ['#94a3b8', '#475569'], browser: ['#38bdf8', '#6366f1'], music: ['#f472b6', '#9333ea'], photos: ['#fb923c', '#e11d48'],
-  calculator: ['#64748b', '#1e293b'], program: ['#a78bfa', '#6d28d9'],
+  calculator: ['#64748b', '#1e293b'], program: ['#a78bfa', '#6d28d9'], video: ['#f87171', '#b91c1c'],
 };
 const GLYPHS = {
   terminal: '<path d="M5 7l5 5-5 5"/><path d="M12 18h7"/>',
@@ -14,6 +14,7 @@ const GLYPHS = {
   music: '<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',
   photos: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M3 17l5-5 4 4 3-3 6 5"/>',
   calculator: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h2M14 12h2M8 16h2M14 16h2"/>',
+  video: '<rect x="3" y="5" width="18" height="14" rx="3.5"/><path d="M10.2 9l4.6 3-4.6 3z"/>',
   program: '<rect x="7" y="7" width="10" height="10" rx="1.5"/><path d="M9 3v4M15 3v4M9 17v4M15 17v4M3 9h4M3 15h4M17 9h4M17 15h4"/>',
 };
 

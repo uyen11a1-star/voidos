@@ -10,6 +10,7 @@ import { AudioService, STATIONS } from './audio.js';
 import { renderWallpaper, drawCover, DEFAULT_WALLPAPER } from './wallpaper.js';
 import { processImageFile, imageExt, IMAGE_EXT, isImageFile } from './image-utils.js';
 import { renderIcon } from './icons.js';
+import { VirtualMouse } from './virtual-mouse.js';
 
 const SESSION = '/etc/session.json';
 const MUSIC_STATE = '/home/user/.music.json';
@@ -91,6 +92,7 @@ export class Desktop {
     this.startMenu = new StartMenu(this);
     this.screen.append(this.wall, this.widget, this.iconsEl, this.layer, this.startMenu.el, this.taskbar.el, this.toasts, this.overlay, this.lockEl);
     root.append(this.screen);
+    this.mouse = new VirtualMouse(this); // above everything, even the lock screen
     onLongPress(this.wall, (e) => this.menu(e, [
       { label: 'Mở Trình duyệt', action: () => this.openApp('browser') }, { label: 'Mở Terminal', action: () => this.openApp('terminal') },
       { label: 'Mở Tệp', action: () => this.openApp('files') }, { label: 'Đổi hình nền…', action: () => this.openApp('settings') },
@@ -113,6 +115,8 @@ export class Desktop {
     this._fit();
     this.applyWallpaper();
     if (prev.musicVolume !== cfg.musicVolume) this.audio.setVolume(cfg.musicVolume);
+    this.mouse.set(!!cfg.virtualMouse, cfg.mouseSpeed);
+    this.taskbar.setMouse(!!cfg.virtualMouse);
     this.startMenu.render();
     this._tickClock();
   }
@@ -123,7 +127,10 @@ export class Desktop {
     const aw = this.root.clientWidth, ah = this.root.clientHeight;
     let w, hh, scale = 1, left = 0, top = 0;
     if (this.config.resolution === 'auto') {
-      w = Math.max(240, aw > 0 ? aw : 360); hh = Math.max(320, ah > 0 ? ah : 640);
+      const vw = aw > 0 ? aw : 360, vh = ah > 0 ? ah : 640;
+      // "UI size": bigger buttons and text on the same screen, but never so big that fewer than 240x320 logical pixels remain
+      scale = Math.min((this.config.uiZoom ?? 100) / 100, vw / 240, vh / 320);
+      w = vw / scale; hh = vh / scale;
     } else {
       [w, hh] = String(this.config.resolution).split('x').map(Number);
       if (aw > 0 && ah > 0) { scale = Math.min(aw / w, ah / hh); left = (aw - w * scale) / 2; top = (ah - hh * scale) / 2; }
@@ -133,6 +140,7 @@ export class Desktop {
     this.size = next; this.scale = scale;
     Object.assign(this.screen.style, { width: `${next.w}px`, height: `${next.h}px`, transform: scale === 1 ? '' : `scale(${scale})`, left: `${left}px`, top: `${top}px` });
     this.wm.fit();
+    this.mouse?.fit();
     if (changed && this.wall) { clearTimeout(this._wallTimer); this._wallTimer = setTimeout(() => this.applyWallpaper(), 150); }
   }
 
@@ -179,6 +187,10 @@ export class Desktop {
     this.taskbar.clock.textContent = time;
     this.wTime.textContent = this.lockTime.textContent = time;
     this.wDate.textContent = this.lockDate.textContent = date;
+  }
+
+  setVirtualMouse(on) {
+    try { this.sys('sys.setConfig', { virtualMouse: !!on }); } catch (e) { this.notify(e.message, { level: 'error' }); }
   }
 
   // ---------- lock screen ----------
@@ -349,6 +361,7 @@ export class Desktop {
     this.ro?.disconnect();
     window.removeEventListener('resize', this._onResize);
     this.audio.dispose();
+    this.mouse.destroy();
     this.wm.closeAll();
     clear(this.root);
     this.root.classList.remove('vo-root');

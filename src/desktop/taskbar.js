@@ -10,7 +10,8 @@ export class Taskbar {
     this.tasks = h('div', { class: 'tb-tasks' });
     this.clock = h('span', { class: 'tb-clock' });
     this.music = h('button', { class: 'tb-music', type: 'button', text: '♪', title: 'Nhạc nền', 'aria-label': 'Phát hoặc tạm dừng nhạc', onclick: () => desktop.toggleMusic() });
-    this.el = h('div', { class: 'vo-taskbar' }, this.startBtn, this.tasks, h('div', { class: 'tb-tray' }, this.music, this.clock));
+    this.mouse = h('button', { class: 'tb-mouse', type: 'button', text: '🖱', title: 'Chuột ảo', 'aria-label': 'Bật hoặc tắt chuột ảo', 'aria-pressed': 'false', onclick: () => desktop.setVirtualMouse(!desktop.config.virtualMouse) });
+    this.el = h('div', { class: 'vo-taskbar' }, this.startBtn, this.tasks, h('div', { class: 'tb-tray' }, this.mouse, this.music, this.clock));
   }
 
   update() {
@@ -30,5 +31,10 @@ export class Taskbar {
     this.music.textContent = info.playing ? '⏸' : '♪';
     this.music.classList.toggle('playing', info.playing);
     this.music.title = info.playing ? `Đang phát: ${info.title}` : info.title ? `Tạm dừng: ${info.title}` : 'Nhạc nền';
+  }
+
+  setMouse(on) {
+    this.mouse.classList.toggle('on', on);
+    this.mouse.setAttribute('aria-pressed', String(on));
   }
 }

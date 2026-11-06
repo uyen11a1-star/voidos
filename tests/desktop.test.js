@@ -37,7 +37,7 @@ describe('desktop shell', () => {
   it('builds screen, taskbar, icons for every built-in app, and greets the user', () => {
     expect(root.classList.contains('vo-root')).toBe(true);
     expect(root.dataset.theme).toBe('gold');
-    expect([...desk.iconsEl.querySelectorAll('.vo-icon-name')].map((e) => e.textContent)).toEqual(['Trình duyệt', 'Tệp', 'Âm nhạc', 'Ảnh', 'Terminal', 'Soạn thảo', 'Máy tính', 'Giám sát', 'Cài đặt']);
+    expect([...desk.iconsEl.querySelectorAll('.vo-icon-name')].map((e) => e.textContent)).toEqual(['Trình duyệt', 'Video', 'Tệp', 'Âm nhạc', 'Ảnh', 'Terminal', 'Soạn thảo', 'Máy tính', 'Giám sát', 'Cài đặt']);
     expect(desk.toasts.textContent).toMatch(/Chào mừng/);
     expect(desk.taskbar.clock.textContent).toMatch(/\d/);
   });
@@ -84,7 +84,7 @@ describe('start menu', () => {
   it('opens, lists apps, filters, launches an app and closes', () => {
     click(desk.taskbar.startBtn);
     expect(desk.startMenu.el.hidden).toBe(false);
-    expect(desk.startMenu.list.children.length).toBe(9);
+    expect(desk.startMenu.list.children.length).toBe(10);
     desk.startMenu.search.value = 'term'; desk.startMenu.render();
     expect(desk.startMenu.list.children.length).toBe(1);
     click(desk.startMenu.list.firstChild);

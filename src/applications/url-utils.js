@@ -8,8 +8,8 @@ export const ENGINES = [
 ];
 export const QUICK_LINKS = [
   { title: 'Wikipedia', url: 'https://vi.wikipedia.org/', embed: true },
+  { title: 'YouTube', app: 'video' },
   { title: 'Google', url: 'https://www.google.com/' },
-  { title: 'YouTube', url: 'https://www.youtube.com/' },
   { title: 'GitHub', url: 'https://github.com/' },
   { title: 'Facebook', url: 'https://www.facebook.com/' },
   { title: 'Gmail', url: 'https://mail.google.com/' },

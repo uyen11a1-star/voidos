@@ -44,7 +44,7 @@ describe('icons in the UI', () => {
   it('app icons are SVG tiles; unknown icons fall back to text', () => {
     expect(renderIcon('browser').querySelector('svg')).toBeTruthy();
     expect(renderIcon('🎲').textContent).toBe('🎲');
-    expect(desk.iconsEl.querySelectorAll('.vo-icon svg').length).toBe(9);
+    expect(desk.iconsEl.querySelectorAll('.vo-icon svg').length).toBe(10);
     const w = desk.openApp('terminal');
     expect(w.el.querySelector('.win-icon svg')).toBeTruthy();
     expect(desk.taskbar.tasks.querySelector('.tb-ic svg')).toBeTruthy();
@@ -230,6 +230,9 @@ describe('browser', () => {
     w.api.go('https://youtu.be/dQw4w9WgXcQ');
     expect(frame(w).getAttribute('src')).toBe('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ');
     expect(frame(w).getAttribute('allow')).toContain('fullscreen');
+    expect(frame(w).getAttribute('referrerpolicy')).toBe('strict-origin-when-cross-origin'); // YouTube answers error 153 to no-referrer embeds
+    w.api.go('example.org');
+    expect(frame(w).getAttribute('referrerpolicy')).toBe('no-referrer'); // other sites still get none
   });
   it('engines that cannot be framed open a real tab instead; dangerous input is refused', () => {
     const w = desk.openApp('browser');
@@ -247,7 +250,7 @@ describe('browser', () => {
     openSpy.mockReturnValue(null);
     const w = desk.openApp('browser');
     w.api.go('void://newtab');
-    w.el.querySelector('.tile:nth-child(2)').click();
+    w.el.querySelector('.tile:nth-child(3)').click(); // Google: opens a real tab
     expect(desk.toasts.textContent).toMatch(/chặn cửa sổ mới/);
   });
   it('tabs: open, switch, close (frame removed), limit of 6, last tab closes the window', async () => {
@@ -455,9 +458,9 @@ describe('file manager integration', () => {
 
 describe('big picture', () => {
   it('every built-in app opens, restores from the saved session and closes without errors', async () => {
-    const ids = ['browser', 'files', 'music', 'photos', 'terminal', 'editor', 'calculator', 'monitor', 'settings'];
+    const ids = ['browser', 'video', 'files', 'music', 'photos', 'terminal', 'editor', 'calculator', 'monitor', 'settings'];
     for (const id of ids) expect(desk.openApp(id)).toBeTruthy();
-    expect(desk.wm.list().length).toBe(9);
+    expect(desk.wm.list().length).toBe(10);
     await mount(); // destroys the old desktop first (saving the session), then restores it
     expect(desk.wm.list().map((w) => w.appId).sort()).toEqual([...ids].sort());
     desk.wm.closeAll();

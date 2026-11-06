@@ -4,6 +4,7 @@ export const THEMES = ['gold', 'azure', 'crimson', 'emerald', 'violet'];
 export const DEFAULT_CONFIG = Object.freeze({
   hostname: 'voidos', ramKB: 1024, quotaKB: 8192, resolution: 'auto', theme: 'gold', fastBoot: false, clock24: true, volume: 50,
   wallpaper: 'gen:voidgold', musicVolume: 40, musicAutoplay: false, lockscreen: true,
+  virtualMouse: false, mouseSpeed: 3, uiZoom: 100, youtubeKey: '',
 });
 export const HARDWARE_KEYS = ['ramKB']; // changes that only apply after a reboot
 
@@ -20,6 +21,10 @@ const RULES = {
   musicVolume: (v) => Number.isInteger(v) && v >= 0 && v <= 100,
   musicAutoplay: (v) => typeof v === 'boolean',
   lockscreen: (v) => typeof v === 'boolean',
+  virtualMouse: (v) => typeof v === 'boolean',
+  mouseSpeed: (v) => Number.isInteger(v) && v >= 1 && v <= 5,
+  uiZoom: (v) => Number.isInteger(v) && v >= 80 && v <= 250,
+  youtubeKey: (v) => v === '' || /^[A-Za-z0-9_-]{20,64}$/.test(v),
 };
 
 // Invalid or unknown values fall back to defaults (a damaged config must never block boot).

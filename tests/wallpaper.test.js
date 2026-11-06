@@ -47,7 +47,7 @@ describe('procedural wallpapers', () => {
 
 describe('icons', () => {
   it('every icon id has a tile and glyph and renders an svg', () => {
-    expect(ICON_IDS.length).toBe(10);
+    expect(ICON_IDS.length).toBe(11);
     for (const id of ICON_IDS) { const svg = iconSvg(id); expect(svg).toContain('<svg'); expect(svg).toContain(`vi-${id}`); expect(svg).not.toContain('undefined'); }
   });
 });

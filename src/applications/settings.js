@@ -30,11 +30,15 @@ export function openSettings(desktop) {
   const fast = h('input', { type: 'checkbox' }); fast.checked = cfg.fastBoot;
   const c24 = h('input', { type: 'checkbox' }); c24.checked = cfg.clock24;
   const lock = h('input', { type: 'checkbox' }); lock.checked = cfg.lockscreen;
+  const zoom = select([100, 125, 150, 175, 200], cfg.uiZoom ?? 100, (z) => `${z}%`);
+  const mouse = h('input', { type: 'checkbox' }); mouse.checked = !!cfg.virtualMouse;
+  const speed = h('input', { type: 'range', min: '1', max: '5', step: '1', value: String(cfg.mouseSpeed ?? 3), 'aria-label': 'Tốc độ chuột ảo' });
+  const ytKey = h('input', { class: 'set-input', type: 'text', value: cfg.youtubeKey ?? '', placeholder: 'AIza…', autocapitalize: 'off', spellcheck: 'false', 'aria-label': 'YouTube API key' });
   const vol = h('input', { type: 'range', min: '0', max: '100', step: '5', value: String(cfg.volume ?? 50), 'aria-label': 'Âm lượng' });
   const field = (label, el) => h('label', { class: 'set-field' }, h('span', { text: label }), el);
 
   async function apply() {
-    const next = { theme: theme.value, resolution: res.value, ramKB: Number(ram.value), quotaKB: Number(quota.value), hostname: host.value.trim(), fastBoot: fast.checked, clock24: c24.checked, volume: Number(vol.value), lockscreen: lock.checked };
+    const next = { theme: theme.value, resolution: res.value, ramKB: Number(ram.value), quotaKB: Number(quota.value), hostname: host.value.trim(), fastBoot: fast.checked, clock24: c24.checked, volume: Number(vol.value), lockscreen: lock.checked, uiZoom: Number(zoom.value), virtualMouse: mouse.checked, mouseSpeed: Number(speed.value), youtubeKey: ytKey.value.trim() };
     const cur = sys('sys.config');
     const patch = Object.fromEntries(Object.entries(next).filter(([k, v]) => cur[k] !== v));
     if (!Object.keys(patch).length) return desktop.notify('Không có thay đổi', { level: 'info' });
@@ -97,12 +101,16 @@ export function openSettings(desktop) {
   const content = h('div', { class: 'set' },
     banner,
     h('h4', { text: 'Hình nền' }), gallery,
-    h('h4', { text: 'Hiển thị' }), field('Màu nhấn', theme), field('Độ phân giải', res),
+    h('h4', { text: 'Hiển thị' }), field('Màu nhấn', theme), field('Độ phân giải', res), field('Cỡ giao diện (khi độ phân giải là Tự động)', zoom),
     h('h4', { text: 'Phần cứng ảo' }), field('RAM', ram), field('Dung lượng ổ đĩa', quota),
     h('h4', { text: 'Hệ thống' }), field('Tên máy', host),
     h('label', { class: 'set-check' }, fast, h('span', { text: 'Khởi động nhanh (bỏ qua hiệu ứng chờ)' })),
     h('label', { class: 'set-check' }, c24, h('span', { text: 'Đồng hồ 24 giờ' })),
     h('label', { class: 'set-check' }, lock, h('span', { text: 'Hiện màn hình khóa khi mở máy' })),
+    h('h4', { text: 'Chuột ảo' }),
+    h('label', { class: 'set-check' }, mouse, h('span', { text: 'Bật touchpad nổi và con trỏ chuột (dễ nhấn mục nhỏ)' })),
+    field('Tốc độ con trỏ', speed),
+    h('h4', { text: 'Dịch vụ' }), field('YouTube API key (cho app Video)', ytKey),
     field('Âm lượng thông báo', vol),
     h('div', { class: 'set-actions' }, h('button', { class: 'btn primary', type: 'button', text: 'Áp dụng', onclick: apply })),
     h('h4', { text: 'Thông tin máy' }), infoBox,
@@ -111,7 +119,7 @@ export function openSettings(desktop) {
   const win = desktop.wm.open({ appId: 'settings', title: 'Cài đặt', icon: 'settings', content, width: 250, height: 330 });
   const timer = setInterval(() => { if (!win.minimized) refreshInfo(); }, 2000);
   win.closers.push(() => clearInterval(timer));
-  win.api = { apply, exportBackup, importBackup, refreshInfo, fields: { theme, res, ram, quota, host, fast, c24, vol, lock }, gallery, banner };
+  win.api = { apply, exportBackup, importBackup, refreshInfo, fields: { theme, res, ram, quota, host, fast, c24, vol, lock, zoom, mouse, speed, ytKey }, gallery, banner };
   refreshInfo();
   return win;
 }

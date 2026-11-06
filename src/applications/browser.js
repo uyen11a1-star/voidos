@@ -60,15 +60,15 @@ export function openBrowser(desktop, state = {}) {
       h('div', { class: 'br-logo', text: 'Void Browser' }),
       h('div', { class: 'br-searchbox' }, input, h('button', { class: 'btn primary', type: 'button', text: 'Đi', onclick: () => go2(input.value) })),
       h('div', { class: 'br-chips' }, ENGINES.map((e) => h('button', { class: `chip${e.id === engine ? ' on' : ''}`, type: 'button', text: e.framable ? e.name : `${e.name} ↗`, title: e.framable ? 'Hiện trong trình duyệt' : 'Mở ở tab ngoài của điện thoại', onclick: () => { engine = e.id; refreshPane(); } }))),
-      h('div', { class: 'br-tiles' }, QUICK_LINKS.map((q) => h('button', { class: 'tile', type: 'button', onclick: () => (q.embed ? go2(q.url) : openExternal(q.url)) }, h('span', { class: 'tile-ic', text: q.title[0] }), h('span', { text: q.embed ? q.title : `${q.title} ↗` })))),
-      h('p', { class: 'br-hint', text: 'Dán link YouTube vào thanh địa chỉ để xem video ngay tại đây. Trang có ↗ sẽ mở ở tab ngoài vì chúng không cho nhúng vào trình duyệt này.' }),
+      h('div', { class: 'br-tiles' }, QUICK_LINKS.map((q) => h('button', { class: 'tile', type: 'button', onclick: () => (q.app ? desktop.openApp(q.app) : q.embed ? go2(q.url) : openExternal(q.url)) }, h('span', { class: 'tile-ic', text: q.title[0] }), h('span', { text: q.embed || q.app ? q.title : `${q.title} ↗` })))),
+      h('p', { class: 'br-hint', text: 'YouTube đã có app Video riêng trong VoidOS. Trang có ↗ sẽ mở ở tab ngoài vì chúng không cho nhúng vào trình duyệt này.' }),
       bookmarks.length ? h('h3', { text: 'Dấu trang' }) : null, bookmarks.length ? list(bookmarks.slice(0, 6)) : null);
   }
 
   function renderTarget(tab, t) {
     clear(tab.pane);
     if (t.type === 'void') tab.pane.append(voidPage(t.page));
-    else if (t.type === 'file') { const { doc } = localDoc(t.path); tab.pane.append(frame(null, { sandbox: LOCAL_SANDBOX, srcdoc: doc })); } else tab.pane.append(frame(null, { sandbox: WEB_SANDBOX, src: t.url }));
+    else if (t.type === 'file') { const { doc } = localDoc(t.path); tab.pane.append(frame(null, { sandbox: LOCAL_SANDBOX, srcdoc: doc })); } else tab.pane.append(frame(null, { sandbox: WEB_SANDBOX, src: t.url, referrerpolicy: t.embed ? 'strict-origin-when-cross-origin' : 'no-referrer' })); // YouTube refuses embeds that send no referrer (error 153)
   }
 
   function titleOf(t) {
